@@ -2,5 +2,4 @@ dash
 plotly
 pandas
 matplotlib
-io
 Gunicorn
