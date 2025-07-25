@@ -1,3 +1,4 @@
+numpy
 dash==3.1.1
 dash_ag_grid
 dash_bootstrap_components
