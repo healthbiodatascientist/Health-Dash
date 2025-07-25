@@ -1,3 +1,4 @@
+import numpy as np
 from dash import Dash, html, dcc, Input, Output  # pip install dash
 import plotly.express as px
 import dash_ag_grid as dag
@@ -9,36 +10,43 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 import gunicorn
-year = '2023'
-specialism = 'Accident & Emergency'
-df_hosp_beds = pd.read_csv('https://raw.githubusercontent.com/healthbiodatascientist/Health-Dash/refs/heads/main/beds_by_nhs_board-of-treatment_specialty.csv')
-df_region = pd.read_csv('https://raw.githubusercontent.com/healthbiodatascientist/Health-Dash/refs/heads/main/Health_Boards_(Dec_2020)_Names_and_Codes_in_Scotland.csv')
-df_filter = df_hosp_beds.loc[df_hosp_beds['SpecialtyName'] == specialism] # filter for A&E beds
-df_filter_year = df_filter.loc[df_filter['FinancialYear'].str.startswith(year, na=False)] # filter for year
-df_filternumber = df_filter_year.filter(items=['HB', 'AverageAvailableStaffedBeds', 'PercentageOccupancy', 'AllStaffedBeds', 'AverageOccupiedBeds', 'TotalOccupiedBeds']) # filter for values
-df_filternumber = df_filternumber.set_index('HB')
-df_hb_beds = df_filternumber.join(df_region.set_index('HB20CD'), on='HB') # join health board region names
-df_hb_beds = df_hb_beds.dropna()
-df_hb_beds = df_hb_beds.filter(items=['HB20NM', 'PercentageOccupancy', 'AverageAvailableStaffedBeds', 'AllStaffedBeds'])
+def table_clean():
+    df_hosp_beds = pd.read_csv('https://raw.githubusercontent.com/healthbiodatascientist/Health-Dash/refs/heads/main/beds_by_nhs_board-of-treatment_specialty.csv')
+    df_region = pd.read_csv('https://raw.githubusercontent.com/healthbiodatascientist/Health-Dash/refs/heads/main/Health_Boards_(Dec_2020)_Names_and_Codes_in_Scotland.csv')
+    df_hosp_beds = df_hosp_beds.set_index('HB')
+    df_hb_beds = df_hosp_beds.join(df_region.set_index('HB20CD'), on='HB') # join health board region names
+    df_hb_beds = df_hb_beds.filter(items=['FinancialYear', 'SpecialtyName', 'HB20NM', 'PercentageOccupancy', 'AverageAvailableStaffedBeds', 'AllStaffedBeds'])
+    return df_hb_beds
+df_hb_beds = table_clean()
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.layout = dbc.Container([
-    html.H1([specialism, " Beds Available in Scottish Health Boards ", year], className='mb-2', style={'textAlign':'center'}),
-    dbc.Row([dbc.Col([dcc.Dropdown(id='category', value='PercentageOccupancy', clearable=False, options=df_hb_beds.columns[1:]) ], width=4)]),
-    dbc.Row([dbc.Col([html.Img(id='bar-graph-matplotlib')], width=12)]),
-    dbc.Row([dbc.Col([dcc.Graph(id='bar-graph-plotly', figure={})], width=12, md=6),
+    html.H3("Choose a year and a specialty from the list below:", className='mb-2', style={'textAlign':'left'}),
+    dbc.Row([dbc.Col([dcc.Dropdown(id='year', value='2023/24', clearable=False, options=np.unique(df_hb_beds['FinancialYear'].values)) ], width=4)]),
+    dbc.Row([dbc.Col([dcc.Dropdown(id='specialism', value='All Specialties', clearable=False, options=np.unique(df_hb_beds['SpecialtyName'].values)) ], width=4)]),
+    html.H1("Beds Available in Scottish Health Boards", className='mb-2', style={'textAlign':'center'}),
+    dbc.Row([dbc.Col([dcc.Dropdown(id='category', value='PercentageOccupancy', clearable=False, options=df_hb_beds.columns[3:6]) ], width=4)]),
+    dbc.Row([dbc.Col([html.Img(id='bar-graph-matplotlib')], width=8)]),
+    dbc.Row([dbc.Col([dcc.Graph(id='bar-graph-plotly', figure={})], width=8, md=6),
              dbc.Col([dag.AgGrid(id='grid', rowData=df_hb_beds.to_dict("records"), columnDefs=[{"field": i} for i in df_hb_beds.columns], columnSize="sizeToFit",)], width=12, md=6),
              ], className='mt-4'),])
 @app.callback(
     Output(component_id='bar-graph-matplotlib', component_property='src'),
     Output('bar-graph-plotly', 'figure'),
     Output('grid', 'defaultColDef'),
+    Input('year', 'value'),
+    Input('specialism', 'value'),
     Input('category', 'value'),
+    
 )
 
-def plot_data(selected_yaxis):
+def plot_data(year, specialism, selected_yaxis):
 
     # Build the matplotlib figure
-    fig = plt.figure(figsize=(14, 6), constrained_layout=True)
+    df_hb_beds = table_clean()
+    df_hb_beds = df_hb_beds.loc[df_hb_beds['FinancialYear'].str.startswith(year, na=False)] # filter for year
+    df_hb_beds = df_hb_beds.loc[df_hb_beds['SpecialtyName'] == specialism] # filter for specialism
+    df_hb_beds = df_hb_beds.filter(items=['HB20NM', 'PercentageOccupancy', 'AverageAvailableStaffedBeds', 'AllStaffedBeds'])
+    fig = plt.figure(figsize=(8, 6), constrained_layout=True)
     plt.bar(df_hb_beds['HB20NM'], df_hb_beds[selected_yaxis], color='blue')
     plt.ylabel(selected_yaxis)
     plt.xticks(rotation=90)
@@ -67,6 +75,6 @@ def plot_data(selected_yaxis):
         ]
     }
 
-    return fig_bar_matplotlib, fig_bar_plotly, {'cellStyle': my_cellStyle}  
+    return fig_bar_matplotlib, fig_bar_plotly, {'cellStyle': my_cellStyle}
 if __name__ == '__main__':
     app.run()
