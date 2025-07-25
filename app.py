@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 import gunicorn
+
 def table_clean():
     df_hosp_beds = pd.read_csv('https://raw.githubusercontent.com/healthbiodatascientist/Health-Dash/refs/heads/main/beds_by_nhs_board-of-treatment_specialty.csv')
     df_region = pd.read_csv('https://raw.githubusercontent.com/healthbiodatascientist/Health-Dash/refs/heads/main/Health_Boards_(Dec_2020)_Names_and_Codes_in_Scotland.csv')
@@ -17,7 +18,9 @@ def table_clean():
     df_hb_beds = df_hosp_beds.join(df_region.set_index('HB20CD'), on='HB') # join health board region names
     df_hb_beds = df_hb_beds.filter(items=['FinancialYear', 'SpecialtyName', 'HB20NM', 'PercentageOccupancy', 'AverageAvailableStaffedBeds', 'AllStaffedBeds'])
     return df_hb_beds
+
 df_hb_beds = table_clean()
+
 app = Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.layout = dbc.Container([
     html.H3("Choose a year and a specialty from the list below:", className='mb-2', style={'textAlign':'left'}),
@@ -46,7 +49,7 @@ def plot_data(year, specialism, selected_yaxis):
     df_hb_beds = df_hb_beds.loc[df_hb_beds['FinancialYear'].str.startswith(year, na=False)] # filter for year
     df_hb_beds = df_hb_beds.loc[df_hb_beds['SpecialtyName'] == specialism] # filter for specialism
     df_hb_beds = df_hb_beds.filter(items=['HB20NM', 'PercentageOccupancy', 'AverageAvailableStaffedBeds', 'AllStaffedBeds'])
-    fig = plt.figure(figsize=(8, 6), constrained_layout=True)
+    fig = plt.figure(figsize=(12, 6), constrained_layout=True)
     plt.bar(df_hb_beds['HB20NM'], df_hb_beds[selected_yaxis], color='blue')
     plt.ylabel(selected_yaxis)
     plt.xticks(rotation=90)
