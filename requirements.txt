@@ -4,5 +4,8 @@ dash_ag_grid
 dash_bootstrap_components
 plotly
 pandas
+geopandas
+folium
 matplotlib
+mapclasiify
 Gunicorn
