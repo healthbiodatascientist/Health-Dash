@@ -1,0 +1,15 @@
+Health Board,num_emergency_incidents,emergency_incidents_attended,emergency_incidents_conveyed,percent_emergency_incidents_attended,percent_emergency_incidents_conveyed
+Ayrshire and Arran,49317,39247,26753,79.58,54.25
+Borders,15119,12730,8812,84.2,58.28
+Dumfries and Galloway,20023,16803,12860,83.92,64.23
+Fife,50646,40265,26221,79.5,51.77
+Forth Valley,36665,29661,21167,80.9,57.73
+Grampian,67691,52609,31973,77.72,47.23
+Greater Glasgow and Clyde,152660,118713,86024,77.76,56.35
+Highland,41806,34530,23096,82.6,55.25
+Lanarkshire,79706,62536,45801,78.46,57.46
+Lothian,106111,81501,54282,76.81,51.16
+Orkney,1907,1540,1132,80.76,59.36
+Shetland,1638,1415,1094,86.39,66.79
+Tayside,53642,44487,25887,82.93,48.26
+Western Isles,3095,2674,1751,86.4,56.58
